@@ -26,6 +26,10 @@ x: int = 42
 
 The type is merely a hint to improve code readability. It can be used by third-party code-checking tools. Otherwise, it is completely ignored. It does not prevent you from assigning a different kind of value later.
 
+## Python type check tools
+### MyPy
+Reference: https://mypy.readthedocs.io/en/latest/index.html
+
 # Python basics
 - Python use indentations (usually 4 spaces) to represent a code block. Unlike C++, Java, Javascript/Typescript uses {}
 
