@@ -8,11 +8,72 @@ Manage python packages
 
 - Reference: https://packaging.python.org/en/latest/key_projects/#pipenv
 
+- Initialize a folder
+    ```shell
+    # It will generate Pipfile if it doesn't find it in the directory.
+    # It will install packages based on the Pipfile
+    pipenv install
+    ```
+
+- Install new packages
+    ```shell
+    pipenv install <package name>
+
+    # Install dev dependencies
+    pipenv install <package name> --dev
+    ```
+
+- To run the script
+    1. Use pipenv shell
+        ```shell
+        pipenv shell
+        ```
+
+    2. Run the command in pipenv shell
+        ```shell
+        pipenv run python <your script>.py
+        ```
+
+    3. To quit from pipenv shell, just type "exit"
+
+
 ## poetry
 TBD
 
 ## pyenv
 Manage different python versions
+
+- Documentation:
+
+    Homepage: https://github.com/pyenv/pyenv?tab=readme-ov-file#install-additional-python-versions
+
+    Commands: https://github.com/pyenv/pyenv/blob/master/COMMANDS.md#pyenv-version
+
+- List current version and all versions
+    ```shell
+    # List current used version
+    pyenv version
+
+    # List all versions known to pyenv
+    pyenv versions
+    ```
+
+- Install a new python version
+    ```shell
+    pyenv install <version>
+
+    # Example: install latest python 3.10.*
+    pyenv install 3.10
+    ```
+
+- Switch python version
+    ```shell
+    # Sets a local application-specific Python version by writing the version name to a .python-version file in the current directory. This version overrides the global version, and can be overridden itself by setting the PYENV_VERSION environment variable or with the pyenv shell command.
+    pyenv local <python version>
+
+    # Sets the global version of Python to be used in all shells by writing the version name to the ~/.pyenv/version file. This version can be overridden by an application-specific .python-version file, or by setting the PYENV_VERSION environment variable.
+    pyenv global <python version>
+    ```
 
 ## venv
 TBD
@@ -28,6 +89,9 @@ The type is merely a hint to improve code readability. It can be used by third-p
 ## Python type check tools
 ### MyPy
 Reference: https://mypy.readthedocs.io/en/latest/index.html
+
+### VS code plugin
+Mypy, use the "Matan Gover" version (as of 20250518)
 
 # Python basics
 - Python use indentations (usually 4 spaces) to represent a code block. Unlike C++, Java, Javascript/Typescript uses {}
