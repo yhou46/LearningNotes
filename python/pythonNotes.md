@@ -6,7 +6,6 @@ Focus on python 3.x
 ## pipenv
 Manage python packages
 
-
 - Reference: https://packaging.python.org/en/latest/key_projects/#pipenv
 
 ## poetry
@@ -113,8 +112,8 @@ Reference: https://mypy.readthedocs.io/en/latest/index.html
             print(line, end='')  # end='' omits the extra newline
     ```
 
-
-## strings
+# Python built in types
+## string -> string
 - f-string, formatted string?
 
 Example:
@@ -190,8 +189,25 @@ The same type of quote used to start a string must be used to terminate it. Trip
 
 - python strings are immutable. Cannot change single character in a string
 
-## List
+## Array -> List
+Python List is an array list.
+Reference: https://docs.python.org/3/tutorial/datastructures.html
 
+## Linked List -> No built-in type
+Python does not have built in linked list.
+
+the "collections" module includes a deque object, which is implemented as a doubly linked list internally. While deque offers functionalities similar to a linked list, it is primarily designed for double-ended queue operations.
+
+## Queue and stack -> No built-in type, use collections.deque
+
+## HashMap -> dict
+
+## HashSet -> set
+
+## Sorted Map -> No built-in type, use collections.OrderedDict
+Starting from Python 3.7, dict already track the insertion order.
+
+# Python basic syntax
 ## for loop
 Just use range for python 3.*
 
@@ -212,6 +228,10 @@ range(0,10)
 ## Built-in variables
 - \__name__: a built-in variable that always contains the name of the enclosing module. If a program is run as the main script with a command such as python readport.py,
 the __name__ variable is set to '__main__'. Otherwise, if the code is imported using a statement such as import readport, the __name__ variable is set to 'readport'
+
+## Python class and interfaces
+Python does not have 'interface' keyword. To define interfaces, use abstract class with pass keyword for its member functions.
+Python class can have member functions that are not implemented (use pass keyword)
 
 # Interactive mode
 - The underscore symbol "_"
