@@ -90,6 +90,13 @@ The type is merely a hint to improve code readability. It can be used by third-p
 ### MyPy
 Reference: https://mypy.readthedocs.io/en/latest/index.html
 
+Need to import typing to make it recognize the type
+```python
+from typing import List, Dict
+myList: List[int] = [1,2,3]
+myDict: Dict[str, int] = {"key1": 1, "key2": 2}
+```
+
 ### VS code plugin
 Mypy, use the "Matan Gover" version (as of 20250518)
 
@@ -176,9 +183,44 @@ Mypy, use the "Matan Gover" version (as of 20250518)
             print(line, end='')  # end='' omits the extra newline
     ```
 
+# Python class
+## class member access identifier
+Python doesn't have public, protected and private keyword. All members are public by default.
+There are some conventions:
+like __member will have name mangling that internally change its name (see below) and is mainly used to avoid child class overwritten parent class's members, _member (1 underscore) usually indicates that it is a non-public member
+
+Reference: https://docs.python.org/3/tutorial/classes.html#private-variables
+
+- name mangling
+    ```python
+    class MyClass:
+        def __init__(self, member):
+            self.__member = member
+    
+    obj = MyClass()
+    obj.__member # Error, no member named __member
+    obj._MyClass__member # Name mangled. So __member is a private member and should not be called outside the class. But you can still access it.
+
+    ```
+    Reference: https://docs.python.org/3/reference/expressions.html#private-name-mangling
+
 # Python built in types
 ## string -> string
-- f-string, formatted string?
+- f-string, formatted string
+    ```python3
+    # Using named parameters
+    url = "https://api.com/{zip_code}".format(zip_code="90210") # 'https://api.com/90210'
+
+    # Using positional parameters
+    url = "https://api.com/{}".format("90210") # 'https://api.com/90210'
+
+    # Using index
+    url = "https://api.com/{0}".format("90210") # 'https://api.com/90210'
+
+    # f-string
+    zip_code = "90210"
+    url = f"https://api.com/{zip_code}" # 'https://api.com/90210'
+    ```
 
 Example:
 ```python
@@ -257,6 +299,15 @@ The same type of quote used to start a string must be used to terminate it. Trip
 Python List is an array list.
 Reference: https://docs.python.org/3/tutorial/datastructures.html
 
+- List comprehension
+    ```python3
+    fruits = ["apple", "banana", "cherry", "kiwi", "mango"]
+    newlist = [x for x in fruits if "a" in x]
+    
+    print(newlist)
+    # prints ['apple', 'banana', 'mango']
+    ```
+
 ## Linked List -> No built-in type
 Python does not have built in linked list.
 
@@ -270,6 +321,52 @@ the "collections" module includes a deque object, which is implemented as a doub
 
 ## Sorted Map -> No built-in type, use collections.OrderedDict
 Starting from Python 3.7, dict already track the insertion order.
+
+## Decorators
+Reference: https://book.pythontips.com/en/latest/decorators.html
+
+A Python decorator is a design pattern that allows for the modification or extension of the behavior of functions or classes without altering their original code. It essentially wraps a function or class within another function or class, adding functionality before, after, or around the execution of the original.
+
+```python
+def a_new_decorator(a_func):
+
+    def wrapTheFunction():
+        print("I am doing some boring work before executing a_func()")
+
+        a_func()
+
+        print("I am doing some boring work after executing a_func()")
+
+    return wrapTheFunction
+
+def a_function_requiring_decoration():
+    print("I am the function which needs some decoration to remove my foul smell")
+
+a_function_requiring_decoration()
+#outputs: "I am the function which needs some decoration to remove my foul smell"
+
+a_function_requiring_decoration = a_new_decorator(a_function_requiring_decoration)
+#now a_function_requiring_decoration is wrapped by wrapTheFunction()
+
+a_function_requiring_decoration()
+#outputs:I am doing some boring work before executing a_func()
+#        I am the function which needs some decoration to remove my foul smell
+#        I am doing some boring work after executing a_func()
+
+@a_new_decorator
+def a_function_requiring_decoration():
+    """Hey you! Decorate me!"""
+    print("I am the function which needs some decoration to "
+          "remove my foul smell")
+
+a_function_requiring_decoration()
+#outputs: I am doing some boring work before executing a_func()
+#         I am the function which needs some decoration to remove my foul smell
+#         I am doing some boring work after executing a_func()
+
+#the @a_new_decorator is just a short way of saying:
+a_function_requiring_decoration = a_new_decorator(a_function_requiring_decoration)
+```
 
 # Python basic syntax
 ## for loop
