@@ -90,6 +90,13 @@ The type is merely a hint to improve code readability. It can be used by third-p
 ### MyPy
 Reference: https://mypy.readthedocs.io/en/latest/index.html
 
+Need to import typing to make it recognize the type
+```python
+from typing import List, Dict
+myList: List[int] = [1,2,3]
+myDict: Dict[str, int] = {"key1": 1, "key2": 2}
+```
+
 ### VS code plugin
 Mypy, use the "Matan Gover" version (as of 20250518)
 
@@ -154,7 +161,7 @@ Mypy, use the "Matan Gover" version (as of 20250518)
     ```
 
 - Assignment expressions: ":="
-    
+
     This is of the form NAME := expr where expr is any valid Python expression other than an unparenthesized tuple, and NAME is an identifier.
 
     The value of "NAME := expr" is expr and the value of expr is assigned to NAME. A () is required to surround the entire expression
@@ -167,7 +174,7 @@ Mypy, use the "Matan Gover" version (as of 20250518)
     Ref: https://docs.python.org/3/whatsnew/3.8.html#assignment-expressions
 
 - "with" statement:
-    
+
     The with statement that precedes it declares a block of statements (or context) where the file (file) is going to be used.
 
     ```python
@@ -176,9 +183,44 @@ Mypy, use the "Matan Gover" version (as of 20250518)
             print(line, end='')  # end='' omits the extra newline
     ```
 
+# Python class
+## class member access identifier
+Python doesn't have public, protected and private keyword. All members are public by default.
+There are some conventions:
+like __member will have name mangling that internally change its name (see below) and is mainly used to avoid child class overwritten parent class's members, _member (1 underscore) usually indicates that it is a non-public member
+
+Reference: https://docs.python.org/3/tutorial/classes.html#private-variables
+
+- name mangling
+    ```python
+    class MyClass:
+        def __init__(self, member):
+            self.__member = member
+
+    obj = MyClass()
+    obj.__member # Error, no member named __member
+    obj._MyClass__member # Name mangled. So __member is a private member and should not be called outside the class. But you can still access it.
+
+    ```
+    Reference: https://docs.python.org/3/reference/expressions.html#private-name-mangling
+
 # Python built in types
 ## string -> string
-- f-string, formatted string?
+- f-string, formatted string
+    ```python3
+    # Using named parameters
+    url = "https://api.com/{zip_code}".format(zip_code="90210") # 'https://api.com/90210'
+
+    # Using positional parameters
+    url = "https://api.com/{}".format("90210") # 'https://api.com/90210'
+
+    # Using index
+    url = "https://api.com/{0}".format("90210") # 'https://api.com/90210'
+
+    # f-string
+    zip_code = "90210"
+    url = f"https://api.com/{zip_code}" # 'https://api.com/90210'
+    ```
 
 Example:
 ```python
@@ -202,7 +244,7 @@ The same type of quote used to start a string must be used to terminate it. Trip
     ```python
     print(
     '''Content-type: text/html
-    
+
     <h1> Hello World </h1>
     Clock <a href="http://www.python.org">here</a>'''
     )
@@ -257,6 +299,15 @@ The same type of quote used to start a string must be used to terminate it. Trip
 Python List is an array list.
 Reference: https://docs.python.org/3/tutorial/datastructures.html
 
+- List comprehension
+    ```python3
+    fruits = ["apple", "banana", "cherry", "kiwi", "mango"]
+    newlist = [x for x in fruits if "a" in x]
+
+    print(newlist)
+    # prints ['apple', 'banana', 'mango']
+    ```
+
 ## Linked List -> No built-in type
 Python does not have built in linked list.
 
@@ -270,6 +321,64 @@ the "collections" module includes a deque object, which is implemented as a doub
 
 ## Sorted Map -> No built-in type, use collections.OrderedDict
 Starting from Python 3.7, dict already track the insertion order.
+
+## Decorators
+Reference: https://book.pythontips.com/en/latest/decorators.html
+
+A Python decorator is a design pattern that allows for the modification or extension of the behavior of functions or classes without altering their original code. It essentially wraps a function or class within another function or class, adding functionality before, after, or around the execution of the original.
+
+```python
+def a_new_decorator(a_func):
+
+    def wrapTheFunction():
+        print("I am doing some boring work before executing a_func()")
+
+        a_func()
+
+        print("I am doing some boring work after executing a_func()")
+
+    return wrapTheFunction
+
+def a_function_requiring_decoration():
+    print("I am the function which needs some decoration to remove my foul smell")
+
+a_function_requiring_decoration()
+#outputs: "I am the function which needs some decoration to remove my foul smell"
+
+a_function_requiring_decoration = a_new_decorator(a_function_requiring_decoration)
+#now a_function_requiring_decoration is wrapped by wrapTheFunction()
+
+a_function_requiring_decoration()
+#outputs:I am doing some boring work before executing a_func()
+#        I am the function which needs some decoration to remove my foul smell
+#        I am doing some boring work after executing a_func()
+
+@a_new_decorator
+def a_function_requiring_decoration():
+    """Hey you! Decorate me!"""
+    print("I am the function which needs some decoration to "
+          "remove my foul smell")
+
+a_function_requiring_decoration()
+#outputs: I am doing some boring work before executing a_func()
+#         I am the function which needs some decoration to remove my foul smell
+#         I am doing some boring work after executing a_func()
+
+#the @a_new_decorator is just a short way of saying:
+a_function_requiring_decoration = a_new_decorator(a_function_requiring_decoration)
+```
+
+## Comparison
+
+- Python list comparison will compare each item in the list, not just the reference
+```python
+list1 = [1, 2, 3]
+list2 = [1, 2, 3]
+list3 = [3, 2, 1]
+
+print(list1 == list2)  # Output: True
+print(list1 == list3)  # Output: False
+```
 
 # Python basic syntax
 ## for loop
@@ -296,6 +405,69 @@ the __name__ variable is set to '__main__'. Otherwise, if the code is imported u
 ## Python class and interfaces
 Python does not have 'interface' keyword. To define interfaces, use abstract class with pass keyword for its member functions.
 Python class can have member functions that are not implemented (use pass keyword)
+
+# Python asyncio
+## Difference with NodeJS event loop
+
+## Difference between Coroutine, Future, Tasks
+
+# Python threading
+## Global Interpreter Lock (GIL)
+
+## Other
+- Is lock ever needed in asyncio evet loop?
+Not often but yes. Same rule applies to NodeJS as well. Check this example:
+
+```typescript
+
+class BankAccount {
+    constructor() {
+        this.balance = 1000;
+    }
+
+    async withdraw(amount, person) {
+        // Check balance
+        // Lock start: Should lock here
+        if (this.balance >= amount) {
+            console.log(`${person}: Balance is ${this.balance}, withdrawing ${amount}`);
+
+            // await yields control - another withdraw can run! ⚠️
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // When we resume, balance might have changed!
+            this.balance -= amount;
+            console.log(`${person}: Withdrew ${amount}, new balance: ${this.balance}`);
+        } else {
+            console.log(`${person}: Insufficient funds`);
+        }
+        // Lock end: Should lock here
+    }
+}
+
+async function main() {
+    const account = new BankAccount();
+
+    await Promise.all([
+        account.withdraw(600, "Alice"),
+        account.withdraw(600, "Bob")
+    ]);
+
+    // balance will be negative if no locks
+    console.log(`Final balance: ${account.balance}`);
+}
+
+main();
+```
+
+**Output (Race Condition!):**
+```
+Alice: Balance is 1000, withdrawing 600
+Bob: Balance is 1000, withdrawing 600    // ⚠️ Same problem as Python!
+Alice: Withdrew 600, new balance: 400
+Bob: Withdrew 600, new balance: -200     // ⚠️ Overdraft!
+Final balance: -200
+
+```
 
 # Interactive mode
 - The underscore symbol "_"
