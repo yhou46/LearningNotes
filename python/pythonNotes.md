@@ -161,7 +161,7 @@ Mypy, use the "Matan Gover" version (as of 20250518)
     ```
 
 - Assignment expressions: ":="
-    
+
     This is of the form NAME := expr where expr is any valid Python expression other than an unparenthesized tuple, and NAME is an identifier.
 
     The value of "NAME := expr" is expr and the value of expr is assigned to NAME. A () is required to surround the entire expression
@@ -174,7 +174,7 @@ Mypy, use the "Matan Gover" version (as of 20250518)
     Ref: https://docs.python.org/3/whatsnew/3.8.html#assignment-expressions
 
 - "with" statement:
-    
+
     The with statement that precedes it declares a block of statements (or context) where the file (file) is going to be used.
 
     ```python
@@ -196,7 +196,7 @@ Reference: https://docs.python.org/3/tutorial/classes.html#private-variables
     class MyClass:
         def __init__(self, member):
             self.__member = member
-    
+
     obj = MyClass()
     obj.__member # Error, no member named __member
     obj._MyClass__member # Name mangled. So __member is a private member and should not be called outside the class. But you can still access it.
@@ -244,7 +244,7 @@ The same type of quote used to start a string must be used to terminate it. Trip
     ```python
     print(
     '''Content-type: text/html
-    
+
     <h1> Hello World </h1>
     Clock <a href="http://www.python.org">here</a>'''
     )
@@ -303,7 +303,7 @@ Reference: https://docs.python.org/3/tutorial/datastructures.html
     ```python3
     fruits = ["apple", "banana", "cherry", "kiwi", "mango"]
     newlist = [x for x in fruits if "a" in x]
-    
+
     print(newlist)
     # prints ['apple', 'banana', 'mango']
     ```
@@ -368,6 +368,18 @@ a_function_requiring_decoration()
 a_function_requiring_decoration = a_new_decorator(a_function_requiring_decoration)
 ```
 
+## Comparison
+
+- Python list comparison will compare each item in the list, not just the reference
+```python
+list1 = [1, 2, 3]
+list2 = [1, 2, 3]
+list3 = [3, 2, 1]
+
+print(list1 == list2)  # Output: True
+print(list1 == list3)  # Output: False
+```
+
 # Python basic syntax
 ## for loop
 Just use range for python 3.*
@@ -393,6 +405,69 @@ the __name__ variable is set to '__main__'. Otherwise, if the code is imported u
 ## Python class and interfaces
 Python does not have 'interface' keyword. To define interfaces, use abstract class with pass keyword for its member functions.
 Python class can have member functions that are not implemented (use pass keyword)
+
+# Python asyncio
+## Difference with NodeJS event loop
+
+## Difference between Coroutine, Future, Tasks
+
+# Python threading
+## Global Interpreter Lock (GIL)
+
+## Other
+- Is lock ever needed in asyncio evet loop?
+Not often but yes. Same rule applies to NodeJS as well. Check this example:
+
+```typescript
+
+class BankAccount {
+    constructor() {
+        this.balance = 1000;
+    }
+
+    async withdraw(amount, person) {
+        // Check balance
+        // Lock start: Should lock here
+        if (this.balance >= amount) {
+            console.log(`${person}: Balance is ${this.balance}, withdrawing ${amount}`);
+
+            // await yields control - another withdraw can run! ⚠️
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // When we resume, balance might have changed!
+            this.balance -= amount;
+            console.log(`${person}: Withdrew ${amount}, new balance: ${this.balance}`);
+        } else {
+            console.log(`${person}: Insufficient funds`);
+        }
+        // Lock end: Should lock here
+    }
+}
+
+async function main() {
+    const account = new BankAccount();
+
+    await Promise.all([
+        account.withdraw(600, "Alice"),
+        account.withdraw(600, "Bob")
+    ]);
+
+    // balance will be negative if no locks
+    console.log(`Final balance: ${account.balance}`);
+}
+
+main();
+```
+
+**Output (Race Condition!):**
+```
+Alice: Balance is 1000, withdrawing 600
+Bob: Balance is 1000, withdrawing 600    // ⚠️ Same problem as Python!
+Alice: Withdrew 600, new balance: 400
+Bob: Withdrew 600, new balance: -200     // ⚠️ Overdraft!
+Final balance: -200
+
+```
 
 # Interactive mode
 - The underscore symbol "_"
