@@ -71,11 +71,13 @@ Fan out messages: each consumer receive replica of messages?
 
 - **Topics**: Events are stored in topics. Topics are like folders and events are files in the folder. Events in a topic can be read as often as needed—unlike traditional messaging systems, events are not deleted after consumption
 
-- **Broker**: Some of these servers from the storage layer, called the brokers.
+- **Broker**: Some of these servers from the storage layer, called the brokers. (Kafka server side)
 
 - **Partition**: Topics are partitioned, meaning a topic is spread over a number of "buckets" located on different Kafka brokers. Events with the same event key (e.g., a customer or vehicle ID) are written to the same partition, and Kafka guarantees that any consumer of a given topic-partition will always read that partition's events in exactly the same order as they were written.
 
     **Event order is only guaranteed in partition level.**
+
+- **consumer group**: In Kafka, a consumer group is a set of consumers from the same application that work together to consume and process messages from one or more topics. Remember that each topic is divided into a set of ordered partitions. Each partition is consumed by **exactly one** consumer within each consumer group at any given time.
 
 ### Kafka is disk based - [link](https://docs.confluent.io/kafka/design/file-system-constant-time.html)
 Disk read/write are much faster for linear read/write, comparing to random read/write. Instead of keeping data in memory and flush to disk when running out of space, Kafka immediately write data to a persistent log on the filesystem without necessarily flushing to disk. In effect this just means that it is transferred into the kernel's pagecache.
@@ -92,18 +94,44 @@ Kafka does not have explicit retry logic: when a consumer fails to process a mes
 ### Push vs pull model
 Kafka queue use pull stratgy (consumer pull messages from server), reference: https://docs.confluent.io/kafka/design/consumer-design.html#push-versus-pull-design
 
+
+
 ### Kafka partition rebalancing
 Rebalancing comes into play in Kafka when consumers join or leave a consumer group. In either case, there is a different number of consumers over which to distribute the partitions from the topic(s), and, so, they must be redistributed and rebalanced.
 
-[Reference](https://www.confluent.io/blog/debug-apache-kafka-pt-3/#:~:text=Rebalancing%20comes%20into%20play%20in,must%20be%20redistributed%20and%20rebalanced)
+[Useful video](https://www.youtube.com/watch?v=ovdSOIXSyzI&t=160s)
+
+- Kafka group leader (one of the consumer in the consumer group) is elected by Kafka group coordinator (one Kafka broker)
+- Kafka group leader is responsible for calculating the partition assignment, rather than the broker (group coordinator). It makes the partition assignment pluggable (customizable by user, since some consumer may be more powerful than others)
 
 #### Kafka rebalancing logic
-- 
+
+[Reference](https://www.confluent.io/blog/debug-apache-kafka-pt-3/#:~:text=Rebalancing%20comes%20into%20play%20in,must%20be%20redistributed%20and%20rebalanced)
+
+- Stop the world rebalance
+
+    It is like every consumer should stop the work (being revoked the partition), send join group request, and only start work when the partition assignment is complete.
+
+    - Issues:
+        - consumers need to wrap up their work and if they are assigned to the same partition as before, then the wrap up work is wasted.
+        - Work has been completely stoped during the rebalancing phrase. Sometimes the rebalancing takes longer when all consumers are restarted in scenarios like an update. In this case, multiple join group request can be sent and takes longer to complete the rebalancing
+
+
+- Incremental Cooperative rebalance
+    
+    Instead of revoking all partition assignment for all consumers, they continue to work. And only the changed partition assignment is sent back to consumers. If consumers have same partition assignment as before, the process is still going.
+
+- Static group membership (avoid rebalancing)
+
+    Assign a static group member id to each consumer in the group. If a consumer is restarted, the rebalance won't happen unless the session is timed out.
+
 
 ### Zookeeper in Kafka
 Zookeepr is used to manage metadata in Kafka.
 
 ZooKeeper provides several fundamental services for distributed systems, including primary server election, group membership management, configuration information storage, naming, and synchronization at scale. Its primary aim is to make distributed systems like Kafka more straightforward to operate by providing improved and reliable change propagation between replicas in the system. [references](https://github.com/AutoMQ/automq/wiki/What-is-the-Zookeeper-in-Kafka-All-You-Need-to-Know)
+
+Zoopkeeper is not involved in the message processing part in the broker (more like a control plane).
 
 Kafka community is moving to KRaft from Zookeeper. Starting from Kafka version 4.0, Zookeeper is removed and KRaft is the exclusive protocol.
 
