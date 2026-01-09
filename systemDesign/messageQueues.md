@@ -67,7 +67,7 @@ If multiple consumers lisen for the same queue, it is possible that some message
 
     | Kafka | Redis stream | RabbitMQ |
     | - | -| - |
-    | Kafka has data retiontion policy, either by time (retiontion.hours) or by size (retiontion.bytes). Older messages are removed if a message is older than the retention duration or the topic's segment is larger than the limit | User need to explicitly trim or delete messages from Redis stream | TBD |
+    | Kafka has data retiontion policy, either by time (retiontion.hours) or by size (retiontion.bytes). Older messages are removed if a message is older than the retention duration or the topic's segment is larger than the limit | User need to explicitly trim or delete messages from Redis stream | RabbitMQ queue size can be set by user. A message is marked for deletion once acknowledged by consumer. |
 
 ## Kafka
 
@@ -123,6 +123,20 @@ Consumer needs to commit the offset (committed position), which will be used to 
 
 Kafka does not have explicit retry logic: when a consumer fails to process a message, it does not commit the offset within the timeout. The message is not considered consumed and will be delivered to next consumer when it reconnects to the partition
 
+### Kafka session.timeout.ms vs max.poll.interval.ms
+
+- session.timeout.ms:
+
+    The timeout used to detect client failures when using Kafka’s group management facility. The client sends periodic heartbeats to indicate its liveness to the broker. If no heartbeats are received by the broker before the expiration of this session timeout, then the broker will remove this client from the group and initiate a rebalance.
+
+- max.poll.interval.ms
+
+    The maximum delay between invocations of poll() when using consumer group management. This places an upper bound on the amount of time that the consumer can be idle before fetching more records. If poll() is not called before expiration of this timeout, then the consumer is considered failed and the group will rebalance in order to reassign the partitions to another member.
+
+- Differences:
+
+    session.timeout.ms controls the heartbeat and max.poll.interval.ms controls the maximum time a task should take to process. This separation makes it possible to set a longer process time without affecting the heartbeat interval (detect earlier failures when processing time is long). But expiration of either period will trigger a rebalance.
+
 ### Push vs pull model
 Kafka queue use pull stratgy (consumer pull messages from server), reference: https://docs.confluent.io/kafka/design/consumer-design.html#push-versus-pull-design
 
@@ -173,11 +187,25 @@ Kafka community is moving to KRaft from Zookeeper. Starting from Kafka version 4
     
     [Partitions and Data Performance, part 2](https://www.instaclustr.com/blog/apache-kafka-kraft-abandons-the-zookeeper-part-2-partitions-and-meta-data-performance/)
 
+### When should use Kafka:
+
+Use Kafka when:
+    - Need to replay events
+    - Streaming events in high throughput: large amount of real time messages 
+    - Process events in order (order is guaranteed within a partition)
+
+
+Do NOT use Kafka when:
+    - Long running tasks: Kafka relies on consumer to commit offset and not retry logic on failed messages.
+    - Complex routing mechanism
+    - Simply pub sub: Kafka is heavy and overkill for simple pub sub scenarios
+    - Low latency (<10 ms>). Kafka P99 latency is around 100-200ms in a cloud environment
 
 
 ## RabbitMQ
 
-TBD
+### Message acknowledgement
+[reference](https://www.rabbitmq.com/tutorials/tutorial-two-go#:~:text=Message%20acknowledgment%E2%80%8B,if%20the%20workers%20occasionally%20die.)
 
 ## Redis Stream
 - Reference: https://redis.io/docs/latest/develop/data-types/streams/
@@ -203,4 +231,5 @@ A stream can have multiple clients (consumers) waiting for data. Every new item,
 
 ## Spark
 
-TBD
+Spark was created to address the limitations to MapReduce, by doing processing in-memory, reducing the number of steps in a job, and by reusing data across multiple parallel operations. [reference](https://aws.amazon.com/what-is/apache-spark/)
+
