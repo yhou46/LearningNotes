@@ -15,7 +15,14 @@
 - Clearer Architecture: Define clear boundaries between microservices, making systems easier to develop, test, and maintain. 
 
 ## Key points
-- Kafka vs AWS SQS vs Redis+Celery vs RabbitMQ vs Redis Stream
+
+- Batch process vs stream process
+
+    Batch process: process a very large volume of data in a single workload
+
+    Stream process: process small units continuously in real-time flow
+
+- Stream process framework: Kafka vs AWS SQS vs Redis+Celery vs Redis Stream vs RabbitMQ
 
 - stream processing (Flink)
 - Batch processing (spark)
@@ -31,11 +38,36 @@
 
 1. How does it make sure messages are not lost?
 
-1. At least once or at most once?
+    Most queue services have at least once guarantee (with some ack mechanism implemented).
+
+1. At Least Once or At Most Once or Exactly Once?
+    
+    Usually queue services guarantees at least once to make sure messages are not lost. In reality, strict exactly once delivery is impossible, but it can be achieved with some nuances, which is called Effectively-Once (for example, the consuming logic has some deduplicate logic or is idempotent. Then the entire pipeline can be thought as effectively once).
+
+    [References](https://nryanov.com/overview/messaging/delivery-semantics/processing-semantics/exactly-once/at-least-once/at-most-once/delivery-and-processing-semantics/#delivery-semantics-overview-)
+
+1. How does it make sure messages are consumed in order?
+It usually requires queue services to have a single consumer to make sure all messages are delivered in order.
+If multiple consumers lisen for the same queue, it is possible that some messages are processed earlier due to consumer issues.
+
+    All queue services have similar features
+
+    | Kafka | Redis stream | RabbitMQ |
+    | - | -| - |
+    | Each partition in a consumer group can only have one consumer and it guarantees that messages consumed in order within a partition | A single consumer on the queue guarantee the messages delivered in order | A single consumer on the queue guarantee the messages delivered in order |
+
 
 1. How does it distribute messages?
-Multiple worker consume same queue to distribute the load?
-Fan out messages: each consumer receive replica of messages?
+
+    Multiple worker consume same queue to distribute the load?
+    
+    Fan out messages: each consumer receive replica of messages?
+
+1. How to limit the queue size?
+
+    | Kafka | Redis stream | RabbitMQ |
+    | - | -| - |
+    | Kafka has data retiontion policy, either by time (retiontion.hours) or by size (retiontion.bytes). Older messages are removed if a message is older than the retention duration or the topic's segment is larger than the limit | User need to explicitly trim or delete messages from Redis stream | TBD |
 
 ## Kafka
 
@@ -145,6 +177,8 @@ Kafka community is moving to KRaft from Zookeeper. Starting from Kafka version 4
 
 ## RabbitMQ
 
+TBD
+
 ## Redis Stream
 - Reference: https://redis.io/docs/latest/develop/data-types/streams/
 
@@ -165,3 +199,8 @@ A stream can have multiple clients (consumers) waiting for data. Every new item,
     In a single Redis stream, multi coonsumers in a consumer group can receive message out of order. To achieve Kafka partitions, you have to use multiple keys and some sharding system such as Redis Cluster or some other application-specific sharding system.
 
     Basically Kafka partitions are more similar to using N different Redis keys, while Redis consumer groups are a server-side load balancing system of messages from a given stream to N different consumers.
+
+
+## Spark
+
+TBD
