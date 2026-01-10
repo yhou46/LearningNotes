@@ -231,5 +231,12 @@ A stream can have multiple clients (consumers) waiting for data. Every new item,
 
 ## Spark
 
+TBD
+
+Is it data processing framework rather than temporary message storage and transporting?
+
 Spark was created to address the limitations to MapReduce, by doing processing in-memory, reducing the number of steps in a job, and by reusing data across multiple parallel operations. [reference](https://aws.amazon.com/what-is/apache-spark/)
 
+## Flink
+
+TBD

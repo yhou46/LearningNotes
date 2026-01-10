@@ -17,7 +17,7 @@
 Storage?
 - OLAP vs OLTP
 - ElasticSearch
-- ELK
+- ELK (ElasticSearch, Logstash, Kibana)
 
 # Backend and efficiency
 
