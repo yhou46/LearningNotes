@@ -41,6 +41,24 @@ Pagination (cursor vs offset)
 
 - talk to 3rd party API (backoff, retry, timeout, circuit breaker, random select, local fallback)
 
+
+
+## gRPC
+- References:
+https://grpc.io/docs/what-is-grpc/introduction/
+
+- Check systemDesign/gRPC.md for details
+
+1. gRPC uses ProtocolBuf as message payload (not JSON) and HTTP/2 (not HTTP/1.1) for communication. So smaller message size
+
+1. gRPC is faster than REST since it is using HTTP/2, which allows many concurrent streams over a single TCP connection, no blocking. REST is using HTTP/1.1 and It is one request at a time per connection — causes head-of-line blocking
+
+1. Mainly used for communication between microservices with high traffic: 1000+ request per sec to reduce overhead
+
+1. REST is still widely used in public APIs and modern browsers since gRPC has its limitions: need to recompile .proto file for client when changes happen.
+
+1. gRPC is more suitable when you have control over both client and server side
+
 # Messaging system
 - Kafka vs AWS SQS vs Redis + celery vs RabbitMQ
 
