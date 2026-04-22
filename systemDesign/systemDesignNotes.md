@@ -41,8 +41,6 @@ Pagination (cursor vs offset)
 
 - talk to 3rd party API (backoff, retry, timeout, circuit breaker, random select, local fallback)
 
-
-
 ## gRPC
 - References:
 https://grpc.io/docs/what-is-grpc/introduction/
