@@ -126,7 +126,6 @@ GraphQL is a query language and runtime for APIs, developed by Facebook in 2012 
 
 Instead of hitting multiple endpoints with fixed data shapes (as in REST), you send a query describing the structure of the data you want, and the server returns JSON matching that exact shape.
 
-
 ## gRPC
 - References:
 https://grpc.io/docs/what-is-grpc/introduction/
