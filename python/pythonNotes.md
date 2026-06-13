@@ -314,6 +314,9 @@ Python does not have built in linked list.
 the "collections" module includes a deque object, which is implemented as a doubly linked list internally. While deque offers functionalities similar to a linked list, it is primarily designed for double-ended queue operations.
 
 ## Queue and stack -> No built-in type, use collections.deque
+- Queue: use append for push and popleft for pop. Do not use pop since it pops right most elements
+
+- Stack: use append and pop for stack push and pop
 
 ## HashMap -> dict
 

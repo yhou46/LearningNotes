@@ -41,7 +41,7 @@
     Most queue services have at least once guarantee (with some ack mechanism implemented).
 
 1. At Least Once or At Most Once or Exactly Once?
-    
+
     Usually queue services guarantees at least once to make sure messages are not lost. In reality, strict exactly once delivery is impossible, but it can be achieved with some nuances, which is called Effectively-Once (for example, the consuming logic has some deduplicate logic or is idempotent. Then the entire pipeline can be thought as effectively once).
 
     [References](https://nryanov.com/overview/messaging/delivery-semantics/processing-semantics/exactly-once/at-least-once/at-most-once/delivery-and-processing-semantics/#delivery-semantics-overview-)
@@ -60,7 +60,7 @@ If multiple consumers lisen for the same queue, it is possible that some message
 1. How does it distribute messages?
 
     Multiple worker consume same queue to distribute the load?
-    
+
     Fan out messages: each consumer receive replica of messages?
 
 1. How to limit the queue size?
@@ -137,8 +137,16 @@ Kafka does not have explicit retry logic: when a consumer fails to process a mes
 
     session.timeout.ms controls the heartbeat and max.poll.interval.ms controls the maximum time a task should take to process. This separation makes it possible to set a longer process time without affecting the heartbeat interval (detect earlier failures when processing time is long). But expiration of either period will trigger a rebalance.
 
-### Push vs pull model
+### Push vs pull model in consumer
 Kafka queue use pull stratgy (consumer pull messages from server), reference: https://docs.confluent.io/kafka/design/consumer-design.html#push-versus-pull-design
+
+- Why?
+Ref: https://kafka.apache.org/43/design/design/#push-vs-pull
+
+- Why pull model still makes Kafka deliver messages in low latencies?
+The consumer request to block in a “long poll” waiting until data arrives (and optionally waiting until a given number of bytes is available to ensure large transfer sizes).
+
+Kafka has a long polling connection and will send messages immediately if any, within the timeout. If it times out, it responds with empty response and another long polling request is made by consumer clients (Kafka client library). During the time, the TCP conneciton is kept alive.
 
 
 
@@ -189,13 +197,14 @@ Kafka community is moving to KRaft from Zookeeper. Starting from Kafka version 4
 
 ### When should use Kafka:
 
-Use Kafka when:
+- Use Kafka when:
     - Need to replay events
-    - Streaming events in high throughput: large amount of real time messages 
-    - Process events in order (order is guaranteed within a partition)
+    - Streaming events in high throughput: large amount of real time messages
+    - Process events in order with fault tolerance (order is guaranteed within a partition)
+        - Kafka has rebalancing mechanism to balance which consumer should consume which partition when consumers leave/join the group
 
 
-Do NOT use Kafka when:
+- Do NOT use Kafka when:
     - Long running tasks: Kafka relies on consumer to commit offset and not retry logic on failed messages.
     - Complex routing mechanism
     - Simply pub sub: Kafka is heavy and overkill for simple pub sub scenarios
@@ -206,6 +215,32 @@ Do NOT use Kafka when:
 
 ### Message acknowledgement
 [reference](https://www.rabbitmq.com/tutorials/tutorial-two-go#:~:text=Message%20acknowledgment%E2%80%8B,if%20the%20workers%20occasionally%20die.)
+
+### When to use RabbitMQ
+
+- Use RabbitMQ when:
+    - Simple task queues that does not need ordering
+    - Complex message routing
+    - Per-Message Reliability
+        - Individual message ACK/NACK
+        - Dead Letter Queues for failed messages
+        - Per-message retry with delays
+        - Inspect/replay individual failed messages
+    - Priority Messages: some messages need to be processed first, though it arrives at later time
+
+    - Short-Lived Messages
+        - Messages consumed and deleted immediately
+        - No need for retention/replay
+
+- Do NOT use RabbitMQ when:
+    - Messages needs to be processed in order with fault tolerance (Use Kafka)
+
+## Redis Pub/Sub
+
+- It is not a reliable delivery message framework. Message are sent and then forgot.
+- If used for sending messages to client, it is required to have a message recovery mechanism when message is lost during the transmission
+    - One example of message recovery, each message should have a unique, consecutive increasing number (1,2,3,4...) and client knows which message is missing and can request for them.
+
 
 ## Redis Stream
 - Reference: https://redis.io/docs/latest/develop/data-types/streams/

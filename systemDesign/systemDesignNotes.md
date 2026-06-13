@@ -22,7 +22,7 @@ Storage?
 ## ACID
 - Atomicity: All operations in a transaction succeed or all fail — no partial writes.
 
-How to achive: write ahead log?
+    - How to achive: write ahead log?
 
 - Consistency: A transaction moves the database from one valid state to another. Constraints (CHECK, UNIQUE, FK, NOT NULL) are enforced at commit time.
 
@@ -55,8 +55,6 @@ A update to a row only add a newer version (snapshot) rather than updating the e
     - Pros: read and write does not interfere with each other and can support high read throughput
 
     - Cons: complex logic to manage versions. Table size can increase a lot if cleanup does not happen in time, since old snapshot lingers around
-
-
 
 - Use Locks
 Use locks on table and rows for read and writes. Shared locks can be used for concurrent reads and exclusive lock should be used for writes until it commits
@@ -98,6 +96,69 @@ Complex searches like find a keyword in multiple field and show the top relevant
 
 # Backend and efficiency
 
+## How to solve celebrity problem?
+
+## celebrity effects: a huge amount of read request for the same data entry in the system. Regular cache won't work since the key is handled by only server/shard of the system (either cache or DB)
+
+- request coalescing: combining multiple requests for the same key into a single request
+    - How to combine?
+    - Pros vs Cons?
+
+- Cache key fanout: spreads a single hot key across multiple cache entries. Instead of storing the celebrity's post under one key, you store identical copies under ten different keys. Clients randomly pick one
+    - Pros vs Cons?
+
+## How to solve the traffic spike when a popular cache item expires?
+It happens when a popular entry expires in cache and suddenly a huge number request need to refresh the cache entry at the same time.
+
+- **Use distributed lock** to make sure only one service update the cache
+    - Cons: if the update process takes too long or failed, it blocks all other requests
+
+- **Probabilistic early refresh**: serving cached data while refreshing it in the background. This refreshes cache entries before they expire, but not all at once. It makes the request service has a higher probability to update the cache when the entry is more close to expiration.
+
+For most important cache entries, we need to have cron job to update the cache periodically to avoid the spikes
+
+## How to handle cache invalidation when data updates need to be immediately visible?
+
+**Not resolved yet**
+
+Assume you have DB and cache layer, you almost always update DB first, then updating the cache (write through cache case) when updating a data entry.
+
+- How do you invalidate cache entries?
+    - cache-aside:
+
+        A update request should invalidate the cache entry instead of updating it, because another process can update the same entry at the roughly same time. Since DB update and cache update are not atomic, DB entry and cache entry can have mismatch if the process update the cache instead of invalidating it.
+
+        - Example:
+            - processA: update DB
+            - processB: update DB
+            - processB: update cache
+            - processA: update cache
+            - mismatch happens
+
+        - Who should update the cache?
+
+            When a cache miss happens, the reader should load it from DB and update the entry in cache
+
+    - write through cache
+        - the writer updates DB and then updates the cache entry
+
+- Have cache version for each cached key
+
+    Each cached key has a version and when the value is updated, the version is also bumped by the writer in persistent storage (DB for example). And the update of the value and version has to be atomic (same transaction in a SQL DB)
+
+    - Examples:
+        Instead of productId -> metadata, we cache productId:Version -> metadata. Reader needs to first request the cache version and then use the cache key + version to get the value.
+
+    - Pros:
+        - Prevents cache pollution? If read and write request come together and reader create the cache entry with old value on a cache miss, then the later reader will use new version and load new values (because staled data has older version)
+
+    - Cons:
+        - DB needs to store both the cached value and cache key version
+        - 2 reads for a cached value, one for the version, one for the real value
+
+
+
+## Topics
 - Speed up on read path
 - speed up on write path
 - caching strategies
@@ -311,7 +372,55 @@ Clients can request endpoints information on L7 LB endpoints. After getting the 
     - Exponential backoff, where the wait time is increased exponentially after every attempt. With better with a cap to avoid unlimited long time of retries
 - Jitter can help the situation where retries is ineffective when all clients retry at the same time. This is a random amount of time before making or retrying a request to help prevent large bursts by spreading out the arrival rate.
 
+# Back of the envelope caculation
 
+- Caching
+    - single Redis server (no cluster) can handle:
+        - ~1 millisecond latency
+        - 100k+ operations/second
+        - Memory-bound (up to 1TB)
+
+    - consider scaling it when:
+        - Hit rate < 80%
+        - Latency > 1ms
+        - Memory usage > 80%
+        - Cache churn/thrashing
+
+Cassandra is faster for writes but slower for read (append only writes)?
+
+- Databases
+    - single SQL DB (PostgreQL for example):
+        - Up to 50k transactions/second
+        - Sub-5ms read latency (cached)
+        - 64 TiB+ storage capacity
+
+    - consider scaling it when:
+        - Write throughput > 10k TPS
+        - Read latency > 5ms uncached
+        - Geographic distribution needs
+
+- App Servers
+    - Normal server can have:
+        - 100k+ concurrent connections
+        - 8-64 cores @ 2-4 GHz
+        - 64-512GB RAM standard, up to 2TB
+
+    - consider scaling it when:
+        - CPU > 70% utilization
+        - Response latency > SLA
+        - Connections near 100k/instance
+        - Memory > 80%
+
+- Message Queues
+    - Normal message queue can support:
+        - Up to 1 million msgs/sec per broker
+        - Sub-5ms end-to-end latency
+        - Up to 50TB storage
+
+    - consider scaling it when:
+        - Throughput near 800k msgs/sec
+        - Partition count ~200k per cluster
+        - Growing consumer lag
 
 # CDNs
 
